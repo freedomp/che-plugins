@@ -29,17 +29,14 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>che-plugin-java-ext-java</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.che.core</groupId>
             <artifactId>che-core-ide-api</artifactId>
-            <version>${che.core.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.che.core</groupId>
             <artifactId>che-core-ide-jseditor</artifactId>
-            <version>${che.core.version}</version>
         </dependency>
     </dependencies>
     <build>

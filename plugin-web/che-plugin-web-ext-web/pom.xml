@@ -25,70 +25,58 @@
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-            <version>${com.google.code.guice.version}</version>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
-            <version>${javax.inject.version}</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.che.core</groupId>
             <artifactId>che-core-ide-api</artifactId>
-            <version>${che.core.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.gwt</groupId>
             <artifactId>gwt-elemental</artifactId>
-            <version>${com.google.gwt.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.gwt</groupId>
             <artifactId>gwt-user</artifactId>
-            <version>${com.google.gwt.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.gwt.inject</groupId>
             <artifactId>gin</artifactId>
-            <version>${com.google.gwt.gin.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.che.core</groupId>
             <artifactId>che-core-client-gwt-analytics</artifactId>
-            <version>${che.core.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.che.core</groupId>
             <artifactId>che-core-client-gwt-project</artifactId>
-            <version>${che.core.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.che.core</groupId>
             <artifactId>che-core-commons-gwt</artifactId>
-            <version>${che.core.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.che.core</groupId>
             <artifactId>che-core-ide-app</artifactId>
-            <version>${che.core.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.eclipse.che.core</groupId>
             <artifactId>che-core-ide-jseditor</artifactId>
-            <version>${che.core.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.vectomatic</groupId>
             <artifactId>lib-gwt-svg</artifactId>
-            <version>${org.vectomatic.lib-gwt-svg.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
