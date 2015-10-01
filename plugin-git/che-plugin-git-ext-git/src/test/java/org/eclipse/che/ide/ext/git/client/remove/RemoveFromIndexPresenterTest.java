@@ -10,6 +10,9 @@
  *******************************************************************************/
 package org.eclipse.che.ide.ext.git.client.remove;
 
+import com.google.gwt.safehtml.shared.SafeHtml;
+import com.googlecode.gwt.test.utils.GwtReflectionUtils;
+
 import org.eclipse.che.api.project.shared.dto.ProjectDescriptor;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorInput;
@@ -17,14 +20,11 @@ import org.eclipse.che.ide.api.editor.EditorPartPresenter;
 import org.eclipse.che.ide.api.notification.Notification;
 import org.eclipse.che.ide.api.selection.Selection;
 import org.eclipse.che.ide.ext.git.client.BaseTest;
-import org.eclipse.che.ide.part.explorer.project.NewProjectExplorerPresenter;
+import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
 import org.eclipse.che.ide.project.node.FileReferenceNode;
 import org.eclipse.che.ide.project.node.FolderReferenceNode;
 import org.eclipse.che.ide.project.node.ProjectDescriptorNode;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
-import com.google.gwt.safehtml.shared.SafeHtml;
-import com.googlecode.gwt.test.utils.GwtReflectionUtils;
-
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
@@ -41,6 +41,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -65,7 +66,7 @@ public class RemoveFromIndexPresenterTest extends BaseTest {
     @Mock
     private FileReferenceNode        file;
     @Mock
-    private NewProjectExplorerPresenter projectExplorer;
+    private ProjectExplorerPresenter projectExplorer;
 
     @Override
     public void disarm() {
@@ -74,6 +75,7 @@ public class RemoveFromIndexPresenterTest extends BaseTest {
         presenter = new RemoveFromIndexPresenter(view,
                                                  eventBus,
                                                  service,
+                                                 console,
                                                  constant,
                                                  appContext,
                                                  selectionAgent,
@@ -165,7 +167,8 @@ public class RemoveFromIndexPresenterTest extends BaseTest {
         verify(service).remove(eq(rootProjectDescriptor), (List<String>)anyObject(), eq(REMOVED),
                                (AsyncRequestCallback<String>)anyObject());
         verify(notificationManager).showNotification((Notification)anyObject());
-        verify(constant).removeFilesSuccessfull();
+        verify(console).printInfo(anyString());
+        verify(constant, times(2)).removeFilesSuccessfull();
         verify(view).close();
     }
 
@@ -191,6 +194,7 @@ public class RemoveFromIndexPresenterTest extends BaseTest {
         verify(service).remove(eq(rootProjectDescriptor), (List<String>)anyObject(), eq(REMOVED),
                                (AsyncRequestCallback<String>)anyObject());
         verify(constant).removeFilesFailed();
+        verify(console).printError(anyString());
         verify(notificationManager).showNotification((Notification)anyObject());
         verify(view).close();
     }

@@ -1,4 +1,3 @@
-
 /*******************************************************************************
  * Copyright (c) 2012-2015 Codenvy, S.A.
  * All rights reserved. This program and the accompanying materials
@@ -12,7 +11,6 @@
 package org.eclipse.che.ide.ext.java.jdi.client.debug;
 
 import com.google.gwt.resources.client.ImageResource;
-import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.inject.Inject;
@@ -25,6 +23,7 @@ import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.OperationException;
 import org.eclipse.che.api.runner.dto.ApplicationProcessDescriptor;
 import org.eclipse.che.api.runner.dto.RunOptions;
+import org.eclipse.che.commons.annotation.Nullable;
 import org.eclipse.che.ide.api.app.AppContext;
 import org.eclipse.che.ide.api.app.CurrentProject;
 import org.eclipse.che.ide.api.editor.EditorAgent;
@@ -70,7 +69,7 @@ import org.eclipse.che.ide.ext.runner.client.models.Environment;
 import org.eclipse.che.ide.ext.runner.client.models.Runner;
 import org.eclipse.che.ide.ext.runner.client.runneractions.impl.launch.common.RunnerApplicationStatusEvent;
 import org.eclipse.che.ide.ext.runner.client.runneractions.impl.launch.common.RunnerApplicationStatusEventHandler;
-import org.eclipse.che.ide.part.explorer.project.NewProjectExplorerPresenter;
+import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
 import org.eclipse.che.ide.project.node.FileReferenceNode;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
@@ -84,7 +83,6 @@ import org.vectomatic.dom.svg.ui.SVGResource;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-import org.eclipse.che.commons.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -139,7 +137,7 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
     private       Location                               executionPoint;
     private       Runner                                 runner;
     private final ChooseRunnerAction                     chooseRunnerAction;
-    private final NewProjectExplorerPresenter projectExplorer;
+    private final ProjectExplorerPresenter               projectExplorer;
 
     private String host;
     private int    port;
@@ -163,7 +161,7 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
                              DtoUnmarshallerFactory dtoUnmarshallerFactory,
                              final AppContext appContext,
                              ChooseRunnerAction chooseRunnerAction,
-                             NewProjectExplorerPresenter projectExplorer) {
+                             ProjectExplorerPresenter projectExplorer) {
         this.view = view;
         this.eventBus = eventBus;
         this.runnerManager = runnerManager;
@@ -415,13 +413,13 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
     }
 
     private void openFile(@NotNull Location location, @Nullable VirtualFile activeFile, final AsyncCallback<VirtualFile> callback) {
-        final String filePath = resolveFilePathByLocation(location, activeFile);
         CurrentProject currentProject = appContext.getCurrentProject();
 
         if (currentProject == null) {
             return;
         }
 
+        final String filePath = resolveFilePathByLocation(location, activeFile);
         projectExplorer.getNodeByPath(new HasStorablePath.StorablePath(filePath)).then(new Operation<Node>() {
             public HandlerRegistration handlerRegistration;
 
@@ -431,25 +429,29 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
                     return;
                 }
 
-                handlerRegistration = eventBus.addHandler(ActivePartChangedEvent.TYPE, new ActivePartChangedHandler() {
-                    @Override
-                    public void onActivePartChanged(ActivePartChangedEvent event) {
-                        if (event.getActivePart() instanceof EditorPartPresenter) {
-                            final VirtualFile openedFile = ((EditorPartPresenter)event.getActivePart()).getEditorInput().getFile();
-                            if (((FileReferenceNode)node).getStorablePath().equals(openedFile.getPath())) {
-                                handlerRegistration.removeHandler();
-                                // give the editor some time to fully render it's view
-                                new Timer() {
-                                    @Override
-                                    public void run() {
-                                        callback.onSuccess((VirtualFile)node);
-                                    }
-                                }.schedule(300);
+                final FileReferenceNode fileNode = (FileReferenceNode)node;
+                if (!editorAgent.getOpenedEditors().containsKey(filePath)) {
+                    editorAgent.openEditor(fileNode, new EditorAgent.OpenEditorCallback() {
+                        @Override
+                        public void onEditorOpened(EditorPartPresenter editor) {
+                            callback.onSuccess(fileNode);
+                        }
+                    });
+                } else {
+                    handlerRegistration = eventBus.addHandler(ActivePartChangedEvent.TYPE, new ActivePartChangedHandler() {
+                        @Override
+                        public void onActivePartChanged(ActivePartChangedEvent event) {
+                            if (event.getActivePart() instanceof EditorPartPresenter) {
+                                final VirtualFile openedFile = ((EditorPartPresenter)event.getActivePart()).getEditorInput().getFile();
+                                if ((fileNode).getStorablePath().equals(openedFile.getPath())) {
+                                    handlerRegistration.removeHandler();
+                                    callback.onSuccess(fileNode);
+                                }
                             }
                         }
-                    }
-                });
-                eventBus.fireEvent(new FileEvent((VirtualFile)node, OPEN));
+                    });
+                    eventBus.fireEvent(new FileEvent(fileNode, OPEN));
+                }
             }
         });
     }
@@ -477,8 +479,7 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
                                           Notification notification = new Notification(exception.getMessage(), ERROR);
                                           notificationManager.showNotification(notification);
                                       }
-                                  }
-                                 );
+                                  });
     }
 
     @NotNull
@@ -505,6 +506,7 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
     @Override
     public void onResumeButtonClicked() {
         changeButtonsEnableState(false);
+        breakpointManager.unmarkCurrentBreakpoint();
         service.resume(debuggerInfo.getId(), new AsyncRequestCallback<Void>() {
             @Override
             protected void onSuccess(Void result) {
@@ -550,6 +552,7 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
     @Override
     public void onStepIntoButtonClicked() {
         if (!view.resetStepIntoButton(false)) return;
+        breakpointManager.unmarkCurrentBreakpoint();
         service.stepInto(debuggerInfo.getId(), new AsyncRequestCallback<Void>() {
             @Override
             protected void onSuccess(Void result) {
@@ -570,6 +573,7 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
     @Override
     public void onStepOverButtonClicked() {
         if (!view.resetStepOverButton(false)) return;
+        breakpointManager.unmarkCurrentBreakpoint();
         service.stepOver(debuggerInfo.getId(), new AsyncRequestCallback<Void>() {
             @Override
             protected void onSuccess(Void result) {
@@ -591,6 +595,7 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
     @Override
     public void onStepReturnButtonClicked() {
         if (!view.resetStepReturnButton(false)) return;
+        breakpointManager.unmarkCurrentBreakpoint();
         service.stepReturn(debuggerInfo.getId(), new AsyncRequestCallback<Void>() {
             @Override
             protected void onSuccess(Void result) {
@@ -676,9 +681,9 @@ public class DebuggerPresenter extends BasePresenter implements DebuggerView.Act
     private void resetStates() {
         variables.clear();
         view.setVariables(variables);
+        view.clearExecutionPoint();
         selectedVariable = null;
         updateChangeValueButtonEnableState();
-        breakpointManager.unmarkCurrentBreakpoint();
     }
 
     private void showDialog(@NotNull DebuggerInfo debuggerInfo) {

@@ -27,7 +27,8 @@ import org.eclipse.che.ide.api.project.tree.VirtualFile;
 import org.eclipse.che.ide.api.selection.Selection;
 import org.eclipse.che.ide.api.selection.SelectionAgent;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
-import org.eclipse.che.ide.part.explorer.project.NewProjectExplorerPresenter;
+import org.eclipse.che.ide.ext.git.client.GitOutputPartPresenter;
+import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
 import org.eclipse.che.ide.project.node.FileReferenceNode;
 import org.eclipse.che.ide.project.node.FolderReferenceNode;
 import org.eclipse.che.ide.project.node.ResourceBasedNode;
@@ -48,17 +49,18 @@ import static org.eclipse.che.ide.api.notification.Notification.Type.INFO;
  * @author Ann Zhuleva
  */
 public class RemoveFromIndexPresenter implements RemoveFromIndexView.ActionDelegate {
-    private       RemoveFromIndexView         view;
-    private       EventBus                    eventBus;
-    private final NewProjectExplorerPresenter projectExplorer;
-    private       GitServiceClient            service;
-    private       GitLocalizationConstant     constant;
-    private       AppContext                  appContext;
-    private       CurrentProject              project;
-    private       SelectionAgent              selectionAgent;
-    private       NotificationManager         notificationManager;
-    private       List<EditorPartPresenter>   openedEditors;
-    private       EditorAgent                 editorAgent;
+    private       RemoveFromIndexView       view;
+    private       EventBus                  eventBus;
+    private final GitOutputPartPresenter    console;
+    private final ProjectExplorerPresenter  projectExplorer;
+    private       GitServiceClient          service;
+    private       GitLocalizationConstant   constant;
+    private       AppContext                appContext;
+    private       CurrentProject            project;
+    private       SelectionAgent            selectionAgent;
+    private       NotificationManager       notificationManager;
+    private       List<EditorPartPresenter> openedEditors;
+    private       EditorAgent               editorAgent;
 
     /**
      * Create presenter
@@ -73,14 +75,16 @@ public class RemoveFromIndexPresenter implements RemoveFromIndexView.ActionDeleg
     public RemoveFromIndexPresenter(RemoveFromIndexView view,
                                     EventBus eventBus,
                                     GitServiceClient service,
+                                    GitOutputPartPresenter console,
                                     GitLocalizationConstant constant,
                                     AppContext appContext,
                                     SelectionAgent selectionAgent,
                                     NotificationManager notificationManager,
                                     EditorAgent editorAgent,
-                                    NewProjectExplorerPresenter projectExplorer) {
+                                    ProjectExplorerPresenter projectExplorer) {
         this.view = view;
         this.eventBus = eventBus;
+        this.console = console;
         this.projectExplorer = projectExplorer;
         this.view.setDelegate(this);
         this.service = service;
@@ -148,6 +152,7 @@ public class RemoveFromIndexPresenter implements RemoveFromIndexView.ActionDeleg
                        new AsyncRequestCallback<String>() {
                            @Override
                            protected void onSuccess(String result) {
+                               console.printInfo(constant.removeFilesSuccessfull());
                                Notification notification = new Notification(constant.removeFilesSuccessfull(), INFO);
                                notificationManager.showNotification(notification);
 
@@ -233,6 +238,7 @@ public class RemoveFromIndexPresenter implements RemoveFromIndexView.ActionDeleg
      */
     private void handleError(@NotNull Throwable e) {
         String errorMessage = (e.getMessage() != null && !e.getMessage().isEmpty()) ? e.getMessage() : constant.removeFilesFailed();
+        console.printError(errorMessage);
         Notification notification = new Notification(errorMessage, ERROR);
         notificationManager.showNotification(notification);
     }

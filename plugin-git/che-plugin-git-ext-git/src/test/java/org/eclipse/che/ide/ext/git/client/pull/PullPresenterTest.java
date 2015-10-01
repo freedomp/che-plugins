@@ -17,6 +17,7 @@ import org.eclipse.che.api.project.shared.dto.ProjectDescriptor;
 import org.eclipse.che.ide.api.editor.EditorAgent;
 import org.eclipse.che.ide.api.editor.EditorInput;
 import org.eclipse.che.ide.api.editor.EditorPartPresenter;
+import org.eclipse.che.ide.api.notification.Notification;
 import org.eclipse.che.ide.ext.git.client.BaseTest;
 import org.eclipse.che.ide.ext.git.client.BranchSearcher;
 import org.eclipse.che.ide.project.node.FileReferenceNode;
@@ -56,6 +57,8 @@ import static org.mockito.Mockito.when;
  */
 public class PullPresenterTest extends BaseTest {
     public static final boolean SHOW_ALL_INFORMATION = true;
+    public static final String  FILE_PATH            = "/src/testClass.java";
+
     @Mock
     private FileReferenceNode   file;
     @Mock
@@ -91,6 +94,7 @@ public class PullPresenterTest extends BaseTest {
         when(editorAgent.getOpenedEditors()).thenReturn(partPresenterMap);
         when(partPresenter.getEditorInput()).thenReturn(editorInput);
         when(editorInput.getFile()).thenReturn(file);
+        when(file.getPath()).thenReturn(FILE_PATH);
     }
 
     @Test
@@ -241,6 +245,7 @@ public class PullPresenterTest extends BaseTest {
         verify(service).remoteList(eq(rootProjectDescriptor), anyString(), eq(SHOW_ALL_INFORMATION),
                                    (AsyncRequestCallback<List<Remote>>)anyObject());
         verify(constant).branchesListFailed();
+        verify(console).printError(anyString());
         verify(notificationManager).showError(anyString());
         verify(view).setEnablePullButton(eq(DISABLE_BUTTON));
     }
@@ -291,10 +296,12 @@ public class PullPresenterTest extends BaseTest {
         verify(view).close();
         verify(editorAgent).getOpenedEditors();
         verify(service).pull(eq(rootProjectDescriptor), anyString(), eq(REPOSITORY_NAME), (AsyncRequestCallback)anyObject());
-        verify(notificationManager).showInfo(anyString());
+        verify(console).printInfo(anyString());
+        verify(notificationManager).showNotification((Notification) anyObject());
         verify(appContext).getCurrentProject();
         verify(eventBus, times(1)).fireEvent(Matchers.<Event<GwtEvent>>anyObject());
         verify(partPresenter).getEditorInput();
+        verify(file).getPath();
     }
 
     @Test
@@ -317,7 +324,8 @@ public class PullPresenterTest extends BaseTest {
 
         verify(service).pull(eq(rootProjectDescriptor), anyString(), eq(REPOSITORY_NAME), (AsyncRequestCallback<PullResponse>)anyObject());
         verify(view).close();
-        verify(notificationManager).showError(anyString());
+        verify(console).printError(anyString());
+        verify(notificationManager).showNotification((Notification) anyObject());
     }
 
     @Test
@@ -341,7 +349,8 @@ public class PullPresenterTest extends BaseTest {
 
         verify(view).close();
         verify(service).pull(eq(rootProjectDescriptor), anyString(), eq(REPOSITORY_NAME), (AsyncRequestCallback)anyObject());
-        verify(notificationManager).showError(anyString());
+        verify(console).printError(anyString());
+        verify(notificationManager).showNotification((Notification)anyObject());
         verify(appContext).getCurrentProject();
         verify(eventBus, times(1)).fireEvent(Matchers.<Event<GwtEvent>>anyObject());
         verify(partPresenter).getEditorInput();
@@ -366,7 +375,8 @@ public class PullPresenterTest extends BaseTest {
         presenter.onPullClicked();
 
         verify(view).close();
-        verify(notificationManager).showInfo("Already up-to-date");
+        verify(console).printInfo(anyString());
+        verify(notificationManager).showNotification((Notification) anyObject());
         //check Refresh project is not called
         verify(eventBus, never()).fireEvent(Matchers.<Event<GwtEvent>>anyObject());
     }
@@ -376,5 +386,32 @@ public class PullPresenterTest extends BaseTest {
         presenter.onCancelClicked();
 
         verify(view).close();
+    }
+
+    @Test
+    public void shouldRefreshRemoteBranchesWhenRepositoryIsChanged() throws Exception {
+        final List<Remote> remotes = new ArrayList<>();
+        remotes.add(mock(Remote.class));
+        final List<Branch> branches = new ArrayList<>();
+        branches.add(branch);
+        when(branch.isActive()).thenReturn(ACTIVE_BRANCH);
+
+        doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                Object[] arguments = invocation.getArguments();
+                AsyncRequestCallback<List<Branch>> callback = (AsyncRequestCallback<List<Branch>>)arguments[2];
+                Method onSuccess = GwtReflectionUtils.getMethod(callback.getClass(), "onSuccess");
+                onSuccess.invoke(callback, branches);
+                return callback;
+            }
+        }).when(service).branchList((ProjectDescriptor)anyObject(), anyString(), (AsyncRequestCallback<List<Branch>>)anyObject());
+
+        presenter.onRemoteRepositoryChanged();
+
+        verify(service, times(2)).branchList(eq(rootProjectDescriptor), anyString(), (AsyncRequestCallback<List<Branch>>)anyObject());
+        verify(view).setRemoteBranches((List<String>)anyObject());
+        verify(view).setLocalBranches((List<String>)anyObject());
+        verify(view).selectRemoteBranch(anyString());
     }
 }

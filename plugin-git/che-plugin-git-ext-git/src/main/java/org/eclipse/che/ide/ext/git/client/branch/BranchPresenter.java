@@ -32,7 +32,7 @@ import org.eclipse.che.ide.api.project.tree.VirtualFile;
 import org.eclipse.che.ide.dto.DtoFactory;
 import org.eclipse.che.ide.ext.git.client.GitLocalizationConstant;
 import org.eclipse.che.ide.ext.git.client.GitOutputPartPresenter;
-import org.eclipse.che.ide.part.explorer.project.NewProjectExplorerPresenter;
+import org.eclipse.che.ide.part.explorer.project.ProjectExplorerPresenter;
 import org.eclipse.che.ide.rest.AsyncRequestCallback;
 import org.eclipse.che.ide.rest.DtoUnmarshallerFactory;
 import org.eclipse.che.ide.ui.dialogs.ConfirmCallback;
@@ -51,21 +51,22 @@ import static org.eclipse.che.api.git.shared.BranchListRequest.LIST_ALL;
  */
 @Singleton
 public class BranchPresenter implements BranchView.ActionDelegate {
-    private       DtoFactory                  dtoFactory;
-    private       DtoUnmarshallerFactory      dtoUnmarshallerFactory;
-    private       BranchView                  view;
-    private       GitOutputPartPresenter      gitConsole;
-    private       WorkspaceAgent              workspaceAgent;
-    private       DialogFactory               dialogFactory;
-    private final NewProjectExplorerPresenter projectExplorer;
-    private final EventBus                    eventBus;
-    private       CurrentProject              project;
-    private       GitServiceClient            service;
-    private       GitLocalizationConstant     constant;
-    private       EditorAgent                 editorAgent;
-    private       Branch                      selectedBranch;
-    private       AppContext                  appContext;
-    private       NotificationManager         notificationManager;
+    private       DtoFactory               dtoFactory;
+    private       DtoUnmarshallerFactory   dtoUnmarshallerFactory;
+    private       BranchView               view;
+    private       GitOutputPartPresenter   gitConsole;
+    private       WorkspaceAgent           workspaceAgent;
+    private       DialogFactory            dialogFactory;
+    private final ProjectExplorerPresenter projectExplorer;
+    private final EventBus                 eventBus;
+    private final GitOutputPartPresenter   console;
+    private       CurrentProject           project;
+    private       GitServiceClient         service;
+    private       GitLocalizationConstant  constant;
+    private       EditorAgent              editorAgent;
+    private       Branch                   selectedBranch;
+    private       AppContext               appContext;
+    private       NotificationManager      notificationManager;
 
     /** Create presenter. */
     @Inject
@@ -74,13 +75,14 @@ public class BranchPresenter implements BranchView.ActionDelegate {
                            EditorAgent editorAgent,
                            GitServiceClient service,
                            GitLocalizationConstant constant,
+                           GitOutputPartPresenter console,
                            AppContext appContext,
                            NotificationManager notificationManager,
                            DtoUnmarshallerFactory dtoUnmarshallerFactory,
                            GitOutputPartPresenter gitConsole,
                            WorkspaceAgent workspaceAgent,
                            DialogFactory dialogFactory,
-                           NewProjectExplorerPresenter projectExplorer,
+                           ProjectExplorerPresenter projectExplorer,
                            EventBus eventBus) {
         this.view = view;
         this.dtoFactory = dtoFactory;
@@ -92,6 +94,7 @@ public class BranchPresenter implements BranchView.ActionDelegate {
         this.view.setDelegate(this);
         this.editorAgent = editorAgent;
         this.service = service;
+        this.console = console;
         this.constant = constant;
         this.appContext = appContext;
         this.notificationManager = notificationManager;
@@ -160,6 +163,7 @@ public class BranchPresenter implements BranchView.ActionDelegate {
             protected void onFailure(Throwable exception) {
                 String errorMessage =
                         (exception.getMessage() != null) ? exception.getMessage() : constant.branchRenameFailed();
+                console.printError(errorMessage);
                 notificationManager.showError(errorMessage);
                 getBranches();//rename of remote branch occurs in three stages, so needs update list of branches on view
             }
@@ -268,6 +272,7 @@ public class BranchPresenter implements BranchView.ActionDelegate {
                                protected void onFailure(Throwable exception) {
                                    final String errorMessage =
                                            (exception.getMessage() != null) ? exception.getMessage() : constant.branchesListFailed();
+                                   console.printError(errorMessage);
                                    notificationManager.showError(errorMessage);
                                }
                            }
@@ -293,6 +298,7 @@ public class BranchPresenter implements BranchView.ActionDelegate {
                                                  final String errorMessage = (exception.getMessage() != null)
                                                                              ? exception.getMessage()
                                                                              : constant.branchCreateFailed();
+                                                 console.printError(errorMessage);
                                                  notificationManager.showError(errorMessage);
                                              }
                                          }
@@ -323,6 +329,7 @@ public class BranchPresenter implements BranchView.ActionDelegate {
     void handleError(@NotNull Throwable throwable) {
         String errorMessage = throwable.getMessage();
         if (errorMessage == null) {
+            console.printError(constant.branchDeleteFailed());
             notificationManager.showError(constant.branchDeleteFailed());
             return;
         }
@@ -330,11 +337,14 @@ public class BranchPresenter implements BranchView.ActionDelegate {
         try {
             errorMessage = dtoFactory.createDtoFromJson(errorMessage, ServiceError.class).getMessage();
             if (errorMessage.equals("Unable get private ssh key")) {
+                console.printError(constant.messagesUnableGetSshKey());
                 notificationManager.showError(constant.messagesUnableGetSshKey());
                 return;
             }
+            console.printError(errorMessage);
             notificationManager.showError(errorMessage);
         } catch (Exception e) {
+            console.printError(errorMessage);
             notificationManager.showError(errorMessage);
         }
     }

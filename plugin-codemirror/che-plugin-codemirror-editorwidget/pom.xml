@@ -55,6 +55,16 @@
             <groupId>com.google.gwt.inject</groupId>
             <artifactId>gin</artifactId>
             <scope>provided</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>guice</artifactId>
+                    <groupId>com.google.inject</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>guice-assistedinject</artifactId>
+                    <groupId>com.google.inject.extensions</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
     <build>
