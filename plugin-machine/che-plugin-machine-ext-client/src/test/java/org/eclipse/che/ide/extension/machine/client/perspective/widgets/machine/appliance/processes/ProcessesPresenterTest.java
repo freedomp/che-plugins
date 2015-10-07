@@ -13,7 +13,7 @@ package org.eclipse.che.ide.extension.machine.client.perspective.widgets.machine
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 
 import org.eclipse.che.api.machine.gwt.client.MachineServiceClient;
-import org.eclipse.che.api.machine.shared.dto.ProcessDescriptor;
+import org.eclipse.che.api.machine.shared.dto.MachineProcessDescriptor;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.Promise;
 import org.junit.Test;
@@ -47,14 +47,14 @@ public class ProcessesPresenterTest {
 
     //additional mocks
     @Mock
-    private Promise<List<ProcessDescriptor>> processPromise;
+    private Promise<List<MachineProcessDescriptor>> processPromise;
     @Mock
-    private List<ProcessDescriptor>          descriptors;
+    private List<MachineProcessDescriptor>          descriptors;
     @Mock
-    private AcceptsOneWidget                 container;
+    private AcceptsOneWidget                        container;
 
     @Captor
-    private ArgumentCaptor<Operation<List<ProcessDescriptor>>> operationCaptor;
+    private ArgumentCaptor<Operation<List<MachineProcessDescriptor>>> operationCaptor;
 
     @InjectMocks
     private ProcessesPresenter presenter;

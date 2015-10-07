@@ -26,8 +26,8 @@ import org.eclipse.che.api.machine.server.spi.InstanceProvider;
 import org.eclipse.che.api.machine.shared.MachineStatus;
 import org.eclipse.che.api.machine.shared.dto.CommandDescriptor;
 import org.eclipse.che.api.machine.shared.dto.MachineDescriptor;
+import org.eclipse.che.api.machine.shared.dto.MachineProcessDescriptor;
 import org.eclipse.che.api.machine.shared.dto.MachineStateDescriptor;
-import org.eclipse.che.api.machine.shared.dto.ProcessDescriptor;
 import org.eclipse.che.api.machine.shared.dto.RecipeMachineCreationMetadata;
 import org.eclipse.che.api.machine.shared.dto.SnapshotMachineCreationMetadata;
 import org.eclipse.che.api.machine.shared.dto.recipe.MachineRecipe;
@@ -340,7 +340,7 @@ public class ServiceTest {
 
         Thread.sleep(500);
 
-        final List<ProcessDescriptor> processes = machineService.getProcesses(machine.getId());
+        final List<MachineProcessDescriptor> processes = machineService.getProcesses(machine.getId());
         assertEquals(processes.size(), 1);
         assertEquals(processes.get(0).getCommandLine(), commandInMachine);
     }
@@ -359,10 +359,10 @@ public class ServiceTest {
 
         Thread.sleep(500);
 
-        final List<ProcessDescriptor> processes = machineService.getProcesses(machine.getId());
+        final List<MachineProcessDescriptor> processes = machineService.getProcesses(machine.getId());
         assertEquals(processes.size(), 2);
         Set<String> actualCommandLines = new HashSet<>(2);
-        for (ProcessDescriptor process : processes) {
+        for (MachineProcessDescriptor process : processes) {
             assertTrue(process.getPid() > 0);
             actualCommandLines.add(process.getCommandLine());
         }
@@ -379,7 +379,7 @@ public class ServiceTest {
 
         Thread.sleep(500);
 
-        final List<ProcessDescriptor> processes = machineService.getProcesses(machine.getId());
+        final List<MachineProcessDescriptor> processes = machineService.getProcesses(machine.getId());
         assertEquals(processes.size(), 1);
         assertEquals(processes.get(0).getCommandLine(), commandInMachine);
 
@@ -398,7 +398,7 @@ public class ServiceTest {
 
         Thread.sleep(500);
 
-        final List<ProcessDescriptor> processes = machineService.getProcesses(machine.getId());
+        final List<MachineProcessDescriptor> processes = machineService.getProcesses(machine.getId());
         assertEquals(processes.size(), 1);
         assertEquals(processes.get(0).getCommandLine(), commandInMachine);
 
