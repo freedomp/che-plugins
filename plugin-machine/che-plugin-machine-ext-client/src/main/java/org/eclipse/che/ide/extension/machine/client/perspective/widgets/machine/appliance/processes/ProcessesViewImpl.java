@@ -22,7 +22,7 @@ import com.google.gwt.view.client.SingleSelectionModel;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import org.eclipse.che.api.machine.shared.dto.MachineProcessDescriptor;
+import org.eclipse.che.api.machine.shared.dto.MachineProcessDto;
 import org.eclipse.che.ide.extension.machine.client.MachineLocalizationConstant;
 import org.eclipse.che.ide.extension.machine.client.TableResources;
 
@@ -44,9 +44,9 @@ public class ProcessesViewImpl extends Composite implements ProcessesView {
     private ActionDelegate delegate;
 
     @UiField(provided = true)
-    final CellTable<MachineProcessDescriptor> processesTable;
+    final CellTable<MachineProcessDto> processesTable;
     @UiField(provided = true)
-    final MachineLocalizationConstant         locale;
+    final MachineLocalizationConstant  locale;
 
     @Inject
     public ProcessesViewImpl(MachineLocalizationConstant locale, TableResources tableResources) {
@@ -56,43 +56,43 @@ public class ProcessesViewImpl extends Composite implements ProcessesView {
         initWidget(UI_BINDER.createAndBindUi(this));
     }
 
-    private CellTable<MachineProcessDescriptor> createTable(@NotNull TableResources tableResources) {
-        CellTable<MachineProcessDescriptor> table = new CellTable<>(0, tableResources);
+    private CellTable<MachineProcessDto> createTable(@NotNull TableResources tableResources) {
+        CellTable<MachineProcessDto> table = new CellTable<>(0, tableResources);
 
-        TextColumn<MachineProcessDescriptor> name = new TextColumn<MachineProcessDescriptor>() {
+        TextColumn<MachineProcessDto> name = new TextColumn<MachineProcessDto>() {
             @Override
-            public String getValue(MachineProcessDescriptor descriptor) {
+            public String getValue(MachineProcessDto descriptor) {
                 return "Process " + descriptor.getPid();
             }
         };
 
-        TextColumn<MachineProcessDescriptor> protocol = new TextColumn<MachineProcessDescriptor>() {
+        TextColumn<MachineProcessDto> protocol = new TextColumn<MachineProcessDto>() {
             @Override
-            public String getValue(MachineProcessDescriptor descriptor) {
+            public String getValue(MachineProcessDto descriptor) {
                 //TODO it's stub. Need add real value
                 return "tcp";
             }
         };
 
-        TextColumn<MachineProcessDescriptor> port = new TextColumn<MachineProcessDescriptor>() {
+        TextColumn<MachineProcessDto> port = new TextColumn<MachineProcessDto>() {
             @Override
-            public String getValue(MachineProcessDescriptor descriptor) {
+            public String getValue(MachineProcessDto descriptor) {
                 //TODO it's stub. Need add real value
                 return "8000";
             }
         };
 
-        TextColumn<MachineProcessDescriptor> time = new TextColumn<MachineProcessDescriptor>() {
+        TextColumn<MachineProcessDto> time = new TextColumn<MachineProcessDto>() {
             @Override
-            public String getValue(MachineProcessDescriptor descriptor) {
+            public String getValue(MachineProcessDto descriptor) {
                 //TODO it's stub. Need add real value
                 return "10:12:24";
             }
         };
 
-        TextColumn<MachineProcessDescriptor> active = new TextColumn<MachineProcessDescriptor>() {
+        TextColumn<MachineProcessDto> active = new TextColumn<MachineProcessDto>() {
             @Override
-            public String getValue(MachineProcessDescriptor descriptor) {
+            public String getValue(MachineProcessDto descriptor) {
                 boolean isActive = descriptor.isAlive();
 
                 //TODO it's stub. Need add real value
@@ -106,7 +106,7 @@ public class ProcessesViewImpl extends Composite implements ProcessesView {
         table.addColumn(time, locale.processTableTime());
         table.addColumn(active, locale.processTableActive());
 
-        final SingleSelectionModel<MachineProcessDescriptor> selectionModel = new SingleSelectionModel<>();
+        final SingleSelectionModel<MachineProcessDto> selectionModel = new SingleSelectionModel<>();
         selectionModel.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
             @Override
             public void onSelectionChange(SelectionChangeEvent event) {
@@ -121,7 +121,7 @@ public class ProcessesViewImpl extends Composite implements ProcessesView {
 
     /** {@inheritDoc} */
     @Override
-    public void setProcesses(@NotNull List<MachineProcessDescriptor> descriptors) {
+    public void setProcesses(@NotNull List<MachineProcessDto> descriptors) {
         processesTable.setRowData(descriptors);
     }
 

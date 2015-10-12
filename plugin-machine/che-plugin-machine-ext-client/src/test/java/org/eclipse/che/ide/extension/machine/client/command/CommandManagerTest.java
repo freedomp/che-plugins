@@ -11,7 +11,7 @@
 package org.eclipse.che.ide.extension.machine.client.command;
 
 import org.eclipse.che.api.machine.gwt.client.MachineServiceClient;
-import org.eclipse.che.api.machine.shared.dto.MachineProcessDescriptor;
+import org.eclipse.che.api.machine.shared.dto.MachineProcessDto;
 import org.eclipse.che.api.promises.client.Operation;
 import org.eclipse.che.api.promises.client.Promise;
 import org.eclipse.che.ide.api.app.AppContext;
@@ -63,9 +63,9 @@ public class CommandManagerTest {
     private CommandPropertyValueProviderRegistry commandPropertyValueProviderRegistry;
 
     @Mock
-    private Promise<MachineProcessDescriptor>                   processPromise;
+    private Promise<MachineProcessDto>                          processPromise;
     @Captor
-    private ArgumentCaptor<Operation<MachineProcessDescriptor>> processCaptor;
+    private ArgumentCaptor<Operation<MachineProcessDto>> processCaptor;
 
     @InjectMocks
     private CommandManager commandManager;
@@ -90,7 +90,7 @@ public class CommandManagerTest {
         CommandConfiguration command = mock(CommandConfiguration.class);
         when(command.toCommandLine()).thenReturn(commandLine);
 
-        MachineProcessDescriptor process = mock(MachineProcessDescriptor.class);
+        MachineProcessDto process = mock(MachineProcessDto.class);
         int pid = 123;
         when(process.getPid()).thenReturn(pid);
 
